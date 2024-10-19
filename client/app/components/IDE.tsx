@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 const IDE = () => {
     return (
         <div className='text-white  w-full  px-5 h-screen flex flex-row'>
-            <FileTreeDemo />
+
             <div className='flex flex-col w-[80%] gap-4'>
                 <Input className='dark border-gray-600 w-full bg-[#2c2c2c] h-[70%] overflow-scroll' />
 

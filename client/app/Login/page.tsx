@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-
+import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { auth } from "@/Firebase";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +29,10 @@ export default function Login() {
         setError(null);
 
         try {
+            // Set persistence to 'local' explicitly (default behavior)
+            await setPersistence(auth, browserLocalPersistence);
+
+            // Now proceed to sign in the user
             await signInWithEmailAndPassword(auth, email, password);
             router.push("/dashboard"); // Redirect after successful login
         } catch (err: any) {

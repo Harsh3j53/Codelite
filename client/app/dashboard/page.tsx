@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+
 import IDEPage from "../components/IDE";
+import AppSidebar from "@/components/app-sidebar";
 
 export default function Layout({ children }: { children?: React.ReactNode; isIDEPage?: boolean }) {
     // If isIDEPage is true, override children with the IDEPage component
