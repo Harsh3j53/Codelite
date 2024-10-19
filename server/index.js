@@ -16,7 +16,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new SocketServer({
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000", // Your frontend URL
+    methods: ["GET", "POST"],
   },
 });
 
@@ -34,6 +35,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(6000, () => {
-  console.log("🐳 docker server running on port 6000");
+server.listen(4000, () => {
+  console.log("🐳 docker server running on port 4000");
 });
