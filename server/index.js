@@ -1,40 +1,61 @@
 const http = require("http");
 const express = require("express");
 const { Server: SocketServer } = require("socket.io");
-
 const pty = require("node-pty");
-
-const ptyProcess = pty.spawn("bash", [], {
-  name: "xterm-color",
-  cols: 80,
-  rows: 30,
-  cwd: process.env.INIT_CWD,
-  env: process.env,
-});
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = new SocketServer({
+const io = new SocketServer(server, {
   cors: {
     origin: "http://localhost:3000", // Your frontend URL
     methods: ["GET", "POST"],
   },
 });
 
-io.attach(server);
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, "client/build")));
 
-ptyProcess.onData((data) => {
-  io.emit("terminal:data", data);
+// Dashboard route
+app.get("/dashboard", (req, res) => {
+  res.send("Dashboard page");
 });
 
 io.on("connection", (socket) => {
-  console.log("socket connected", socket.id);
+  console.log("Socket connected:", socket.id);
 
-  socket.on("terminal:write", (data) => {
-    ptyProcess.write(data + "\n");
+  const ptyProcess = pty.spawn(
+    process.platform === "win32" ? "cmd.exe" : "bash",
+    [],
+    {
+      name: "xterm-color",
+      cols: 80,
+      rows: 30,
+      cwd: process.env.HOME,
+      env: process.env,
+    }
+  );
+
+  ptyProcess.onData((data) => {
+    socket.emit("terminal:data", data);
+  });
+
+  socket.on("terminal:input", (data) => {
+    ptyProcess.write(data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+    ptyProcess.kill();
   });
 });
 
-server.listen(4000, () => {
-  console.log("🐳 docker server running on port 4000");
+// Catch-all handler for any request that doesn't match the ones above
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
+
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`🐳 Server running on port ${PORT}`);
 });

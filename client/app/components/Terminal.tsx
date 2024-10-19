@@ -1,47 +1,92 @@
-import { Terminal as XTerminal } from "@xterm/xterm";
-import { useEffect, useRef } from "react";
+import { Terminal as XTerminal } from "xterm";
+import { FitAddon } from "xterm-addon-fit";
+import { useEffect, useRef, useState } from "react";
 import socket from "@/socket";
-
-import "@xterm/xterm/css/xterm.css";
+import "xterm/css/xterm.css";
 
 const Terminal = () => {
   const terminalRef = useRef<HTMLDivElement | null>(null);
-  const isRendered = useRef(false);
+  const [terminal, setTerminal] = useState<XTerminal | null>(null);
+  const [fitAddon, setFitAddon] = useState<FitAddon | null>(null);
 
   useEffect(() => {
-    if (isRendered.current) return;
-    isRendered.current = true;
+    if (!terminalRef.current || terminal) return;
 
     const term = new XTerminal({
-      rows: 20,
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: "monospace",
+      theme: {
+        background: "#1e1e1e",
+      },
     });
 
-    if (terminalRef.current) {
-      term.open(terminalRef.current);
-    }
+    const fit = new FitAddon();
+    term.loadAddon(fit);
 
-    // Alert or console log when socket connects to the backend
-    socket.on("connect", () => {
-      console.log("Socket connected: ", socket.id); // For logging in the console
-      alert("Socket connected!"); // Or trigger an alert
-    });
-
-    term.onData((data) => {
-      socket.emit("terminal:write", data);
-    });
-
-    function onTerminalData(data: string) {
-      term.write(data);
-    }
-
-    socket.on("terminal:data", onTerminalData);
+    term.open(terminalRef.current);
+    setTerminal(term);
+    setFitAddon(fit);
 
     return () => {
-      socket.off("terminal:data", onTerminalData);
+      term.dispose();
     };
   }, []);
 
-  return <div ref={terminalRef} id="terminal" />;
+  useEffect(() => {
+    if (!terminal || !fitAddon) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      fitAddon.fit();
+    });
+
+    resizeObserver.observe(terminalRef.current!);
+
+    const handleResize = () => {
+      fitAddon.fit();
+    };
+    window.addEventListener("resize", handleResize);
+
+    fitAddon.fit();
+
+    const onData = (data: string) => {
+      socket.emit("terminal:input", data);
+    };
+
+    const onTerminalData = (data: string) => {
+      terminal.write(data);
+    };
+
+    terminal.onData(onData);
+    socket.on("terminal:data", onTerminalData);
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      terminal.write("\r\nConnected to the terminal server.\r\n");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+      terminal.write("\r\nDisconnected from the terminal server.\r\n");
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", handleResize);
+      socket.off("terminal:data", onTerminalData);
+    };
+  }, [terminal, fitAddon]);
+
+  return (
+    <div
+      ref={terminalRef}
+      style={{
+        width: "100%",
+        height: "400px",
+        backgroundColor: "#1e1e1e",
+      }}
+    />
+  );
 };
 
 export default Terminal;
