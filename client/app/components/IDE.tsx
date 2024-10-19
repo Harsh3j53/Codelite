@@ -8,7 +8,7 @@ const IDE = () => {
   return (
     <div className="text-white  w-full  px-5 h-screen flex flex-row">
       <div className="flex flex-col w-[80%] gap-4">
-        <Input className="dark border-gray-600 w-full bg-[#2c2c2c] h-[70%] overflow-scroll" />
+        <Input className="dark border-gray-600 w-full bg-[white] h-[70%] overflow-scroll" />
 
         <Terminal />
       </div>
