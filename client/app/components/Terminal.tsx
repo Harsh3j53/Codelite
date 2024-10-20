@@ -17,13 +17,13 @@ const Terminal = () => {
       fontSize: 14,
       fontFamily: "monospace",
       theme: {
-        background: "#1e1e1e",
+        background: "#000000",
+        foreground: "#ffffff",
       },
     });
 
     const fit = new FitAddon();
     term.loadAddon(fit);
-
     term.open(terminalRef.current);
     setTerminal(term);
     setFitAddon(fit);
@@ -39,14 +39,12 @@ const Terminal = () => {
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
     });
-
     resizeObserver.observe(terminalRef.current!);
 
     const handleResize = () => {
       fitAddon.fit();
     };
     window.addEventListener("resize", handleResize);
-
     fitAddon.fit();
 
     const onData = (data: string) => {
@@ -76,18 +74,8 @@ const Terminal = () => {
       socket.off("terminal:data", onTerminalData);
     };
   }, [terminal, fitAddon]);
-  return (
-    <div
-      ref={terminalRef}
-      className="bg-black"
-      style={{
-        // width: "100%",
-        // height: "100%", // Changed to fill the container
-        // backgroundColor: "black",
 
-      }}
-    />
-  );
-}
+  return <div ref={terminalRef} className="w-full h-full bg-black" />;
+};
 
 export default Terminal;
