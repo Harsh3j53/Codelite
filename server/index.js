@@ -61,6 +61,10 @@ io.on("connection", (socket) => {
     socket.emit("terminal:data", data);
   });
 
+  socket.on("file:change", async ({ path, content }) => {
+    await fs.writeFile(`./user${path}`, content);
+  });
+
   socket.on("terminal:input", (data) => {
     ptyProcess.write(data);
   });

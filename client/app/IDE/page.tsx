@@ -128,6 +128,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     joinWorkspace(currentWorkspace, passcode);
     setPasscode("");
   };
+
   const handleCopyPasscode = async () => {
     const workspace = workspaces.find((ws) => ws.name === currentWorkspace);
     if (workspace?.passcode) {
@@ -148,7 +149,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           addWorkspace={addWorkspace}
           joinWorkspace={joinWorkspace}
         />
-
         <ToolbarButton icon={Zap} label="Optimize" />
       </div>
       <div className="flex items-center gap-1 justify-end w-full">
@@ -167,7 +167,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           placeholder="Join Workspace Passcode"
           value={passcode}
           onChange={(e) => setPasscode(e.target.value)}
-          className="text-white border-gray-500   "
+          className="text-white border-gray-500"
         />
         <Button onClick={handleJoinWorkspace} className="">
           Join
@@ -176,7 +176,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="flex items-center gap-1 justify-end w-full">
         <ToolbarButton icon={Zap} label="Optimize" />
         <ToolbarButton icon={UsersRound} />
-        <Button onClick={handleCopyPasscode} className="bg-orange-600 rounded-[5px]">Invite</Button>
+        <Button
+          onClick={handleCopyPasscode}
+          className="bg-orange-600 rounded-[5px]"
+        >
+          Invite
+        </Button>
       </div>
     </div>
   );
@@ -228,13 +233,12 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
   );
 };
 
-const CodeEditor: React.FC = () => {
-  const [code, setCode] = useState(`function helloWorld() {
-    console.log("Hello, World!");
+interface CodeEditorProps {
+  value: string;
+  onChange: (value: string) => void;
 }
 
-helloWorld();`);
-
+const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange }) => {
   return (
     <div className="bg-[#1e1e1e] text-white font-mono">
       <div className="flex bg-[#252525] text-sm">
@@ -243,13 +247,13 @@ helloWorld();`);
       </div>
       <div className="p-4 flex">
         <div className="mr-4 text-gray-500 select-none">
-          {code.split("\n").map((_, i) => (
+          {value.split("\n").map((_, i) => (
             <div key={i}>{i + 1}</div>
           ))}
         </div>
         <textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           className="flex-1 bg-transparent outline-none resize-none"
           spellCheck="false"
         />
@@ -262,6 +266,8 @@ const Page: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [fileTree, setFileTree] = useState<FileTreeItemProps[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     const newSocket = io("http://localhost:4000");
@@ -278,7 +284,6 @@ const Page: React.FC = () => {
     setFileTree(result.tree);
   };
 
-
   useEffect(() => {
     getFileTree();
   }, []);
@@ -291,6 +296,20 @@ const Page: React.FC = () => {
       };
     }
   }, [socket]);
+
+  useEffect(() => {
+    if (code) {
+      const timer = setTimeout(() => {
+        socket?.emit("file:change", {
+          path: selectedFile,
+          content: code,
+        });
+      }, 3 * 1000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [code]);
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -357,10 +376,15 @@ const Page: React.FC = () => {
         joinWorkspace={joinWorkspace}
       />
       <div className="flex border-t-[1px] border-t-gray-500 flex-1 overflow-hidden">
-        <FileTree tree={fileTree} />
+        <FileTree onSelect={(path) => setSelectedFile(path)} tree={fileTree} />
         <div className="flex-1 flex flex-col border border-gray-600">
           <div className="flex-1 border-gray-600">
-            <CodeEditor />
+            {selectedFile && (
+              <p className="text-white">
+                {selectedFile.replaceAll("/", " > ")}
+              </p>
+            )}
+            <CodeEditor value={code} onChange={(value) => setCode(value)} />
           </div>
           <div className="h-64 mt-4 bg-black rounded-lg overflow-hidden border-t border-gray-600">
             <Terminal />
