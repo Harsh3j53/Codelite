@@ -22,3 +22,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%}
 }
 
+
+.bg{
+  background-image: url(./50.jpg);
+  background-size: cover;
+}

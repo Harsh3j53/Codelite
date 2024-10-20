@@ -131,10 +131,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
     joinWorkspace(currentWorkspace, passcode);
     setPasscode("");
   };
+  const handleCopyPasscode = async () => {
+    const workspace = workspaces.find((ws) => ws.name === currentWorkspace);
+    if (workspace?.passcode) {
+      await navigator.clipboard.writeText(workspace.passcode);
+      alert(`Passcode copied to clipboard: ${workspace.passcode}`);
+    } else {
+      alert("No passcode found for the selected workspace.");
+    }
+  };
 
   return (
     <div className="flex space-x-2 flex-row bg-black p-4">
-      <div className="flex space-x-2 items-center w-full">
+      <div className="flex space-x-2 w-full">
         <WorkspaceSelectorDropdown
           workspaces={workspaces}
           currentWorkspace={currentWorkspace}
@@ -142,6 +151,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
           addWorkspace={addWorkspace}
           joinWorkspace={joinWorkspace}
         />
+
+        <ToolbarButton icon={Zap} label="Optimize" />
+      </div>
+      <div className="flex items-center gap-1 justify-end w-full">
         <Input
           type="text"
           placeholder="New Workspace Name"
@@ -162,12 +175,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <Button onClick={handleJoinWorkspace} className="">
           Join
         </Button>
-
-      </div>
-      <div className="flex items-center gap-1 justify-end w-full">
-        <ToolbarButton icon={Zap} label="Optimize" />
         <ToolbarButton icon={UsersRound} />
-        <Button className="bg-orange-600 rounded-[5px]">Invite</Button>
+        <Button onClick={handleCopyPasscode} className="bg-orange-600 rounded-[5px]">Invite</Button>
       </div>
     </div>
   );
@@ -278,6 +287,7 @@ const Page: React.FC = () => {
     const result = await response.json();
     setFileTree(result.tree);
   };
+
 
   useEffect(() => {
     getFileTree();
