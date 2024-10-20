@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from '../../Firebase';
@@ -12,7 +11,7 @@ const Dashboard = () => {
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState<string>("");
     const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
-    const [workspaceToJoin, setWorkspaceToJoin] = useState<string>("");
+    const [workspacePasscode, setWorkspacePasscode] = useState<string>(""); // Changed from workspace ID to passcode
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editingMessageContent, setEditingMessageContent] = useState<string>("");
 
@@ -109,17 +108,18 @@ const Dashboard = () => {
     };
 
     const handleJoinWorkspace = async () => {
-        if (workspaceToJoin.trim()) {
-            const workspaceRef = doc(db, "workspace", workspaceToJoin);
-            const workspaceSnap = await getDoc(workspaceRef);
+        if (workspacePasscode.trim()) {
+            const workspacesSnapshot = await getDocs(collection(db, "workspace"));
+            const workspaceToJoin = workspacesSnapshot.docs.find(doc => doc.data().passcode === workspacePasscode);
 
-            if (workspaceSnap.exists()) {
-                await setDoc(doc(db, "joinedWorkspaces", `${user?.uid}_${workspaceToJoin}`), {
+            if (workspaceToJoin) {
+                const workspaceId = workspaceToJoin.id;
+                await setDoc(doc(db, "joinedWorkspaces", `${user?.uid}_${workspaceId}`), {
                     uid: user?.uid,
-                    workspaceId: workspaceToJoin,
+                    workspaceId: workspaceId,
                 });
                 fetchWorkspaces(user?.uid || "");
-                setWorkspaceToJoin("");
+                setWorkspacePasscode(""); // Clear the input after joining
             } else {
                 alert("Workspace not found!");
             }
@@ -138,9 +138,9 @@ const Dashboard = () => {
                 <div className="mb-4">
                     <input
                         type="text"
-                        value={workspaceToJoin}
-                        onChange={(e) => setWorkspaceToJoin(e.target.value)}
-                        placeholder="Enter workspace ID"
+                        value={workspacePasscode}
+                        onChange={(e) => setWorkspacePasscode(e.target.value)}
+                        placeholder="Enter workspace passcode"
                         className="bg-gray-700 text-white w-full p-2 rounded"
                     />
                     <button

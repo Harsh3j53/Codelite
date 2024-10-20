@@ -149,33 +149,39 @@ const Toolbar: React.FC<ToolbarProps> = ({
           addWorkspace={addWorkspace}
           joinWorkspace={joinWorkspace}
         />
-        <div className="flex items-center gap-2 ml-4    w-full ">
-          <Input
-            type="text"
-            placeholder="New Workspace Name"
-            value={newWorkspaceName}
-            onChange={(e) => setNewWorkspaceName(e.target.value)}
-            className="text-white border-gray-500"
-          />
-          <Button onClick={handleAddWorkspace} className="">
-            Create
-          </Button>
-          <Input
-            type="text"
-            placeholder="Join Workspace Passcode"
-            value={passcode}
-            onChange={(e) => setPasscode(e.target.value)}
-            className="text-white border-gray-500"
-          />
-          <Button onClick={handleJoinWorkspace} className="">
-            Join
-          </Button>
-        </div>
+
+      </div>
+      <div className="flex items-center gap-1 justify-end w-full">
+        <Input
+          type="text"
+          placeholder="New Workspace Name"
+          value={newWorkspaceName}
+          onChange={(e) => setNewWorkspaceName(e.target.value)}
+          className="text-white border-gray-500"
+        />
+        <Button onClick={handleAddWorkspace} className="">
+          Create
+        </Button>
+        <Input
+          type="text"
+          placeholder="Join Workspace Passcode"
+          value={passcode}
+          onChange={(e) => setPasscode(e.target.value)}
+          className="text-white border-gray-500"
+        />
+        <Button onClick={handleJoinWorkspace} className="">
+          Join
+        </Button>
       </div>
 
       <div className="flex items-center gap-1 justify-end w-full">
-        <ToolbarButton icon={Zap} label="Optimize" />
-        <ToolbarButton icon={UsersRound} />
+        <a href="/Review">
+          <ToolbarButton icon={Zap} label="Optimize" />
+        </a>
+        <a href="/trial">
+          <ToolbarButton icon={UsersRound} />
+        </a>
+
         <Button
           onClick={handleCopyPasscode}
           className="bg-orange-600 rounded-[5px]"
