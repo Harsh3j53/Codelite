@@ -1,111 +1,125 @@
+import React, { useEffect, useState } from "react";
 import { File, Folder, Tree } from "@/components/ui/file-tree";
+import socket from "@/socket";
 
-export function FileTreeDemo() {
-    return (
-        <div className=" flex h-screen w-[300px] flex-col items-center justify-center overflow-hidden rounded-lg dark  ">
-            <Tree
-                className="p-2 overflow-hidden rounded-md bg-background"
-                initialSelectedId="7"
-                initialExpandedItems={[
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                ]}
-                elements={ELEMENTS}
-            >
-                <Folder element="src" value="1">
-                    <Folder value="2" element="app">
-                        <File value="3">
-                            <p>layout.tsx</p>
-                        </File>
-                        <File value="4">
-                            <p>page.tsx</p>
-                        </File>
-                    </Folder>
-                    <Folder value="5" element="components">
-                        <Folder value="6" element="ui">
-                            <File value="7">
-                                <p>button.tsx</p>
-                            </File>
-                        </Folder>
-                        <File value="8">
-                            <p>header.tsx</p>
-                        </File>
-                        <File value="9">
-                            <p>footer.tsx</p>
-                        </File>
-                    </Folder>
-                    <Folder value="10" element="lib">
-                        <File value="11">
-                            <p>utils.ts</p>
-                        </File>
-                    </Folder>
-                </Folder>
-            </Tree>
-        </div>
-    );
+interface FileTreeNodeProps {
+  fileName: string;
+  nodes?: Record<string, any>;
+  onSelect: (path: string) => void;
+  path: string;
 }
 
-const ELEMENTS = [
-    {
-        id: "1",
-        isSelectable: true,
-        name: "src",
-        children: [
-            {
-                id: "2",
-                isSelectable: true,
-                name: "app",
-                children: [
-                    {
-                        id: "3",
-                        isSelectable: true,
-                        name: "layout.tsx",
-                    },
-                    {
-                        id: "4",
-                        isSelectable: true,
-                        name: "page.tsx",
-                    },
-                ],
-            },
-            {
-                id: "5",
-                isSelectable: true,
-                name: "components",
-                children: [
-                    {
-                        id: "6",
-                        isSelectable: true,
-                        name: "header.tsx",
-                    },
-                    {
-                        id: "7",
-                        isSelectable: true,
-                        name: "footer.tsx",
-                    },
-                ],
-            },
-            {
-                id: "8",
-                isSelectable: true,
-                name: "lib",
-                children: [
-                    {
-                        id: "9",
-                        isSelectable: true,
-                        name: "utils.ts",
-                    },
-                ],
-            },
-        ],
-    },
-];
+const FileTreeNode: React.FC<FileTreeNodeProps> = ({
+  fileName,
+  nodes,
+  onSelect,
+  path,
+}) => {
+  const isDir = !!nodes;
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isDir) return;
+        onSelect(path);
+      }}
+      style={{ marginLeft: "10px" }}
+    >
+      {isDir ? (
+        <Folder element={fileName} value={path}>
+          {Object.entries(nodes).map(([childName, childNodes]) => (
+            <FileTreeNode
+              key={childName}
+              onSelect={onSelect}
+              path={`${path}/${childName}`.replace(/^\/+/, "")}
+              fileName={childName}
+              nodes={childNodes}
+            />
+          ))}
+        </Folder>
+      ) : (
+        <File value={path}>
+          <p className="file-node">{fileName}</p>
+        </File>
+      )}
+    </div>
+  );
+};
+
+interface FileTreeProps {
+  tree: Record<string, any>;
+  onSelect: (path: string) => void;
+}
+
+const FileTree: React.FC<FileTreeProps> = ({ tree, onSelect }) => {
+  return (
+    <>
+      {Object.entries(tree).map(([fileName, nodes]) => (
+        <FileTreeNode
+          key={fileName}
+          onSelect={onSelect}
+          path={fileName}
+          fileName={fileName}
+          nodes={nodes}
+        />
+      ))}
+    </>
+  );
+};
+
+interface FileTreeDemoProps {
+  onFileSelect: (path: string) => void;
+}
+
+export function FileTreeDemo({ onFileSelect }: FileTreeDemoProps) {
+  const [fileTree, setFileTree] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const fetchFileTree = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/files");
+        const data = await response.json();
+        setFileTree(data.tree);
+      } catch (error) {
+        console.error("Error fetching file tree:", error);
+      }
+    };
+
+    fetchFileTree();
+
+    socket.on("file:update", (data) => {
+      console.log("Received file update:", data);
+      setFileTree(data.tree);
+    });
+
+    return () => {
+      socket.off("file:update");
+    };
+  }, []);
+
+  return (
+    <div className="flex h-screen w-[300px] flex-col items-center justify-center overflow-hidden rounded-lg dark">
+      <Tree
+        className="p-2 overflow-hidden rounded-md bg-background"
+        initialSelectedId="7"
+        initialExpandedItems={[
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+        ]}
+      >
+        <FileTree tree={fileTree} onSelect={onFileSelect} />
+      </Tree>
+    </div>
+  );
+}
+
+export default FileTreeDemo;
