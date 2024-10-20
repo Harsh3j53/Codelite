@@ -31,6 +31,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/Firebase"; // Adjust the import based on your Firebase configuration
 import { Input } from "@/components/ui/input";
+import FileTree from "../components/Tree";
 
 interface Workspace {
   id: string;
@@ -178,12 +179,14 @@ interface FileTreeItemProps {
   name: string;
   isFolder: boolean;
   level?: number;
+  children?: FileTreeItemProps[];
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
   name,
   isFolder,
   level = 0,
+  children = [],
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const Icon = isFolder ? Folder : File;
@@ -202,27 +205,41 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
         <span className="text-sm">{name}</span>
       </div>
       {isOpen && isFolder && (
-        <>
-          <FileTreeItem name="subfolder" isFolder={true} level={level + 1} />
-          <FileTreeItem name="file.txt" level={level + 1} isFolder={false} />
-        </>
+        <div>
+          {children.map((child) => (
+            <FileTreeItem
+              key={child.name}
+              name={child.name}
+              isFolder={child.isFolder}
+              level={level + 1}
+              children={child.children}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
 };
 
-const FileTree: React.FC = () => {
-  return (
-    <div className="bg-black p-2 text-white w-64 h-full overflow-y-auto">
-      <div className="p-2 text-xl font-medium">Explorer</div>
-      <FileTreeItem name="project" isFolder={true} />
-      <FileTreeItem name="src" isFolder={true} />
-      <FileTreeItem name="components" isFolder={true} />
-      <FileTreeItem name="index.js" isFolder={false} />
-      <FileTreeItem name="styles.css" isFolder={false} />
-    </div>
-  );
-};
+interface FileTreeProps {
+  tree: FileTreeItemProps[];
+}
+
+// const FileTree: React.FC<FileTreeProps> = ({ tree }) => {
+//   return (
+//     <div className="bg-black p-2 text-white w-64 h-full overflow-y-auto">
+//       <div className="p-2 text-xl font-medium">Explorer</div>
+//       {tree.map((item) => (
+//         <FileTreeItem
+//           key={item.name}
+//           name={item.name}
+//           isFolder={item.isFolder}
+//           children={item.children}
+//         />
+//       ))}
+//     </div>
+//   );
+// };
 
 const CodeEditor: React.FC = () => {
   const [code, setCode] = useState(`function helloWorld() {
@@ -256,6 +273,17 @@ helloWorld();`);
 
 const Page: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [fileTree, setFileTree] = useState<FileTreeItemProps[]>([]);
+
+  const getFileTree = async () => {
+    const response = await fetch("http://localhost:4000/files");
+    const result = await response.json();
+    setFileTree(result.tree);
+  };
+
+  useEffect(() => {
+    getFileTree();
+  }, []);
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -322,7 +350,7 @@ const Page: React.FC = () => {
         joinWorkspace={joinWorkspace}
       />
       <div className="flex border-t-[1px] border-t-gray-500 flex-1 overflow-hidden">
-        <FileTree />
+        <FileTree tree={fileTree} />
         <div className="flex-1 flex flex-col border border-gray-600">
           <div className="flex-1 border-gray-600">
             <CodeEditor />
