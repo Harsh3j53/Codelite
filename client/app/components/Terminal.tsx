@@ -69,6 +69,10 @@ const Terminal = () => {
     });
 
     return () => {
+      socket.off("terminal:data"  );
+    };
+
+    return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       socket.off("terminal:data", onTerminalData);

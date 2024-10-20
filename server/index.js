@@ -5,6 +5,7 @@ const pty = require("node-pty");
 const path = require("path");
 const fs = require("fs/promises");
 const cors = require("cors");
+const chokidar = require("chokidar");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,10 @@ const defaultDirectory = "/Users/harshdeshmukh/downloads/Codelite/server/user";
 // Dashboard route
 app.get("/dashboard", (req, res) => {
   res.send("Dashboard page");
+});
+
+chokidar.watch("./").on("all", (event, path) => {
+  io.emit("file:refresh", path);
 });
 
 // File structure route (not sent to frontend yet)

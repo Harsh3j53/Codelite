@@ -3,20 +3,16 @@ import React, { useState, useEffect } from "react";
 import {
   ChevronDown,
   Folder,
-  Bug,
   Zap,
   FileText,
   ChevronRight,
   UsersRound,
   File,
-  MessageSquare,
-  Bot,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -32,6 +28,7 @@ import {
 import { db, auth } from "@/Firebase"; // Adjust the import based on your Firebase configuration
 import { Input } from "@/components/ui/input";
 import FileTree from "../components/Tree";
+import { io, Socket } from "socket.io-client"; // Add this import
 
 interface Workspace {
   id: string;
@@ -175,6 +172,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <Button onClick={handleJoinWorkspace} className="">
           Join
         </Button>
+      </div>
+      <div className="flex items-center gap-1 justify-end w-full">
+        <ToolbarButton icon={Zap} label="Optimize" />
         <ToolbarButton icon={UsersRound} />
         <Button onClick={handleCopyPasscode} className="bg-orange-600 rounded-[5px]">Invite</Button>
       </div>
@@ -228,26 +228,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
   );
 };
 
-interface FileTreeProps {
-  tree: FileTreeItemProps[];
-}
-
-// const FileTree: React.FC<FileTreeProps> = ({ tree }) => {
-//   return (
-//     <div className="bg-black p-2 text-white w-64 h-full overflow-y-auto">
-//       <div className="p-2 text-xl font-medium">Explorer</div>
-//       {tree.map((item) => (
-//         <FileTreeItem
-//           key={item.name}
-//           name={item.name}
-//           isFolder={item.isFolder}
-//           children={item.children}
-//         />
-//       ))}
-//     </div>
-//   );
-// };
-
 const CodeEditor: React.FC = () => {
   const [code, setCode] = useState(`function helloWorld() {
     console.log("Hello, World!");
@@ -281,6 +261,16 @@ helloWorld();`);
 const Page: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [fileTree, setFileTree] = useState<FileTreeItemProps[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    const newSocket = io("http://localhost:4000");
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
 
   const getFileTree = async () => {
     const response = await fetch("http://localhost:4000/files");
@@ -292,6 +282,15 @@ const Page: React.FC = () => {
   useEffect(() => {
     getFileTree();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("file:refresh", getFileTree);
+      return () => {
+        socket.off("file:refresh", getFileTree);
+      };
+    }
+  }, [socket]);
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
