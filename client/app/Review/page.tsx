@@ -29,7 +29,9 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 
 export default function AnalysisPage() {
   const [code, setCode] = useState("");
-  const [output, setOutput] = useState<string>("");
+  const [optimizedOutput, setOptimizedOutput] = useState<string>("");
+  const [predictedOutput, setPredictedOutput] = useState<string>("");
+  const [analysisOutput, setAnalysisOutput] = useState<string>("");
   const [model, setModel] = useState<any>(null);
 
   useEffect(() => {
@@ -48,10 +50,12 @@ export default function AnalysisPage() {
     try {
       const result = await model.generateContent(prompt);
       const apiResponse = result.response.text().replace(/\*/g, "");
-      setOutput(apiResponse);
+      setOptimizedOutput(apiResponse);
     } catch (error) {
       console.error("Error optimizing code:", error);
-      setOutput("Sorry, something went wrong while optimizing the code.");
+      setOptimizedOutput(
+        "Sorry, something went wrong while optimizing the code."
+      );
     }
   };
 
@@ -61,10 +65,12 @@ export default function AnalysisPage() {
     try {
       const result = await model.generateContent(prompt);
       const apiResponse = result.response.text().replace(/\*/g, "");
-      setOutput(apiResponse);
+      setPredictedOutput(apiResponse);
     } catch (error) {
       console.error("Error predicting code:", error);
-      setOutput("Sorry, something went wrong while predicting the code.");
+      setPredictedOutput(
+        "Sorry, something went wrong while predicting the code."
+      );
     }
   };
 
@@ -74,11 +80,20 @@ export default function AnalysisPage() {
     try {
       const result = await model.generateContent(prompt);
       const apiResponse = result.response.text().replace(/\*/g, "");
-      setOutput(apiResponse);
+      setAnalysisOutput(apiResponse);
     } catch (error) {
       console.error("Error analyzing code:", error);
-      setOutput("Sorry, something went wrong while analyzing the code.");
+      setAnalysisOutput(
+        "Sorry, something went wrong while analyzing the code."
+      );
     }
+  };
+
+  // This function will execute all functions in sequence
+  const runAllFunctions = async () => {
+    await getOptimizedCode();
+    await predictFurtherCode();
+    await handleCodeAnalysis();
   };
 
   return (
@@ -141,10 +156,26 @@ export default function AnalysisPage() {
             >
               Analyze Code
             </Button>
+            <Button
+              onClick={runAllFunctions}
+              className="bg-purple-600 rounded-[5px]"
+            >
+              Run All
+            </Button>
           </div>
-          <div className="bg-[#252525] text-white p-4 mt-2 rounded-[5px] h-[300px] overflow-y-auto">
-            <h2 className="text-lg font-semibold">Analysis Output</h2>
-            <pre className="whitespace-pre-wrap">{output}</pre>
+
+          {/* Display outputs in separate sections */}
+          <div className="bg-[#252525] text-white p-4 mt-2 rounded-[5px] h-[200px] overflow-y-auto">
+            <h2 className="text-lg font-semibold">Optimized Code Output</h2>
+            <pre className="whitespace-pre-wrap">{optimizedOutput}</pre>
+          </div>
+          <div className="bg-[#252525] text-white p-4 mt-2 rounded-[5px] h-[200px] overflow-y-auto">
+            <h2 className="text-lg font-semibold">Predicted Code Output</h2>
+            <pre className="whitespace-pre-wrap">{predictedOutput}</pre>
+          </div>
+          <div className="bg-[#252525] text-white p-4 mt-2 rounded-[5px] h-[200px] overflow-y-auto">
+            <h2 className="text-lg font-semibold">Code Analysis Output</h2>
+            <pre className="whitespace-pre-wrap">{analysisOutput}</pre>
           </div>
         </div>
       </div>

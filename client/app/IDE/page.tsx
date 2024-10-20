@@ -140,8 +140,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="flex space-x-2 flex-row bg-black p-4">
-      <div className="flex space-x-2 w-full">
+    <div className="flex flex-row space-x-2 bg-black p-4">
+      <div className="flex w-full ">
         <WorkspaceSelectorDropdown
           workspaces={workspaces}
           currentWorkspace={currentWorkspace}
@@ -149,30 +149,30 @@ const Toolbar: React.FC<ToolbarProps> = ({
           addWorkspace={addWorkspace}
           joinWorkspace={joinWorkspace}
         />
-        <ToolbarButton icon={Zap} label="Optimize" />
+        <div className="flex items-center gap-2 ml-4    w-full ">
+          <Input
+            type="text"
+            placeholder="New Workspace Name"
+            value={newWorkspaceName}
+            onChange={(e) => setNewWorkspaceName(e.target.value)}
+            className="text-white border-gray-500"
+          />
+          <Button onClick={handleAddWorkspace} className="">
+            Create
+          </Button>
+          <Input
+            type="text"
+            placeholder="Join Workspace Passcode"
+            value={passcode}
+            onChange={(e) => setPasscode(e.target.value)}
+            className="text-white border-gray-500"
+          />
+          <Button onClick={handleJoinWorkspace} className="">
+            Join
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-1 justify-end w-full">
-        <Input
-          type="text"
-          placeholder="New Workspace Name"
-          value={newWorkspaceName}
-          onChange={(e) => setNewWorkspaceName(e.target.value)}
-          className="text-white border-gray-500"
-        />
-        <Button onClick={handleAddWorkspace} className="">
-          Create
-        </Button>
-        <Input
-          type="text"
-          placeholder="Join Workspace Passcode"
-          value={passcode}
-          onChange={(e) => setPasscode(e.target.value)}
-          className="text-white border-gray-500"
-        />
-        <Button onClick={handleJoinWorkspace} className="">
-          Join
-        </Button>
-      </div>
+
       <div className="flex items-center gap-1 justify-end w-full">
         <ToolbarButton icon={Zap} label="Optimize" />
         <ToolbarButton icon={UsersRound} />
