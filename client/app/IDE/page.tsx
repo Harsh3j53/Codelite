@@ -134,7 +134,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div className="flex space-x-2 flex-row bg-black p-4">
-      <div className="flex space-x-2 w-full">
+      <div className="flex space-x-2 items-center w-full">
         <WorkspaceSelectorDropdown
           workspaces={workspaces}
           currentWorkspace={currentWorkspace}
@@ -142,11 +142,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           addWorkspace={addWorkspace}
           joinWorkspace={joinWorkspace}
         />
-        <ToolbarButton icon={Bug} label="Debug" />
-        <ToolbarButton icon={Zap} label="Optimize" />
-        <ToolbarButton icon={FileText} label="Documentation" />
-      </div>
-      <div className="flex items-center gap-1 justify-end w-full">
         <Input
           type="text"
           placeholder="New Workspace Name"
@@ -167,8 +162,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <Button onClick={handleJoinWorkspace} className="">
           Join
         </Button>
+
+      </div>
+      <div className="flex items-center gap-1 justify-end w-full">
+        <ToolbarButton icon={Zap} label="Optimize" />
         <ToolbarButton icon={UsersRound} />
-        <ToolbarButton icon={Bot} />
         <Button className="bg-orange-600 rounded-[5px]">Invite</Button>
       </div>
     </div>
