@@ -1,51 +1,37 @@
+// app/dashboard/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from '../../Firebase'; // Destructure db and auth
-
 import { User } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import Link from "next/link"; // Import Link from Next.js
 
 const Dashboard = () => {
     const [user, setUser] = useState<User | null>(null);
-    const [workspaceName, setWorkspaceName] = useState<string>("");
+    const [workspaces, setWorkspaces] = useState([]);
     const [message, setMessage] = useState<string>("");
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
-                // User is logged in
                 setUser(currentUser);
+                fetchWorkspaces(currentUser.uid); // Fetch workspaces when user is logged in
             } else {
-                // No user is logged in
                 setUser(null);
+                setWorkspaces([]);
             }
         });
 
         return () => unsubscribe(); // Cleanup listener on unmount
     }, []);
 
-    // Function to handle adding workspace to Firestore
-    const addWorkspace = async () => {
-        if (!workspaceName.trim()) {
-            setMessage("Workspace name cannot be empty.");
-            return;
-        }
-
-        try {
-            // Add a new document to the "workspace" collection
-            await addDoc(collection(db, "workspace"), {
-                name: workspaceName,
-                userId: user?.uid, // Storing the user's ID with the workspace
-                createdAt: new Date(), // Timestamp for when the workspace is created
-            });
-
-            setMessage("Workspace added successfully!");
-            setWorkspaceName(""); // Clear the input after submission
-        } catch (error) {
-            console.error("Error adding workspace:", error);
-            setMessage("Error adding workspace.");
-        }
+    const fetchWorkspaces = async (userId: string) => {
+        const querySnapshot = await getDocs(collection(db, "workspace"));
+        const workspaceList = querySnapshot.docs
+            .filter(doc => doc.data().userId === userId) // Filter workspaces by userId
+            .map(doc => ({ id: doc.id, ...doc.data() }));
+        setWorkspaces(workspaceList);
     };
 
     if (!user) {
@@ -56,20 +42,21 @@ const Dashboard = () => {
         <div>
             <h1>Welcome, {user.email}</h1>
 
-            <div className="mt-4">
-                <h2>Add a new Workspace</h2>
-                <input
-                    type="text"
-                    value={workspaceName}
-                    onChange={(e) => setWorkspaceName(e.target.value)}
-                    placeholder="Workspace Name"
-                    className="p-2 border"
-                />
-                <button onClick={addWorkspace} className="p-2 bg-blue-500 text-white ml-2">
-                    Add Workspace
-                </button>
-
-                {message && <p className="mt-2">{message}</p>}
+            <div className="mt-6">
+                <h2>Your Workspaces</h2>
+                {workspaces.length > 0 ? (
+                    <ul>
+                        {workspaces.map((workspace) => (
+                            <li key={workspace.id} className="mt-2">
+                                <Link href={`/workspaces/${workspace.id}`}>
+                                    {workspace.name} (Created at: {new Date(workspace.createdAt.seconds * 1000).toLocaleString()})
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No workspaces found.</p>
+                )}
             </div>
         </div>
     );

@@ -1,23 +1,41 @@
 "use client";
-import React from "react";
-import { FileTreeDemo } from "./Filetree";
-import { Input } from "@/components/ui/input";
-import Terminal from "./Terminal";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { db } from "@/Firebase"; // Adjust import as needed
+import { doc, getDoc } from "firebase/firestore";
+// import Layout from "@/components/Layout"; // Adjust import as needed
 
-const IDE = () => {
+const WorkspacePage = () => {
+  const router = useRouter();
+  const { id } = router.query; // Get the workspace ID from the URL
+  const [workspace, setWorkspace] = useState(null);
+
+  useEffect(() => {
+    const fetchWorkspace = async () => {
+      if (id) {
+        const workspaceRef = doc(db, "workspace", id);
+        const workspaceDoc = await getDoc(workspaceRef);
+
+        if (workspaceDoc.exists()) {
+          setWorkspace({ id: workspaceDoc.id, ...workspaceDoc.data() });
+        } else {
+          console.log("No such workspace!");
+        }
+      }
+    };
+
+    fetchWorkspace();
+  }, [id]);
+
+  if (!workspace) {
+    return <p>Loading...</p>; // Loading state while fetching workspace
+  }
+
   return (
-    <div className="text-white  w-full  px-5 h-screen flex flex-row">
-      <div className="flex flex-col w-[80%] gap-4">
-        <Input className="dark border-gray-600 w-full bg-[white] h-[70%] overflow-scroll" />
-
-        <Terminal />
-      </div>
-      <div className="flex flex-col gap-4">
-        <div className="w-[400px] h-[400px]  bg-[#18181B] ml-4"></div>
-        <div className="w-[400px] h-full mb-10 bg-[#18181B] ml-4"></div>
-      </div>
+    <div workspaceId={workspace.id}>
+      {/* You can add other content or children here if needed */}
     </div>
   );
 };
 
-export default IDE;
+export default WorkspacePage;

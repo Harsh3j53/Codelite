@@ -76,17 +76,18 @@ const Terminal = () => {
       socket.off("terminal:data", onTerminalData);
     };
   }, [terminal, fitAddon]);
-
   return (
     <div
       ref={terminalRef}
+      className="bg-black"
       style={{
-        width: "100%",
-        height: "400px",
-        backgroundColor: "#1e1e1e",
+        // width: "100%",
+        // height: "100%", // Changed to fill the container
+        // backgroundColor: "black",
+
       }}
     />
   );
-};
+}
 
 export default Terminal;
